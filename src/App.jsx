@@ -76,6 +76,37 @@ const scientificInsights = [
   },
 ];
 
+const conclusionCards = [
+  {
+    title: "Launch",
+    detail:
+      "Engines ignited. The mission began with a powerful ascent beyond Earth's gravity.",
+    tone: "linear-gradient(160deg, rgba(255, 129, 66, 0.3), rgba(121, 38, 19, 0.2) 58%, rgba(20, 12, 12, 0.82))",
+  },
+  {
+    title: "Leaving Earth",
+    detail:
+      "The planet fades behind as the spacecraft breaks through the atmosphere.",
+    tone: "linear-gradient(160deg, rgba(255, 162, 97, 0.26), rgba(94, 28, 17, 0.24) 56%, rgba(16, 10, 10, 0.82))",
+  },
+  {
+    title: "Deep Space Travel",
+    detail:
+      "Silence surrounds the journey as millions of kilometers pass in the vast unknown.",
+    tone: "linear-gradient(160deg, rgba(112, 133, 255, 0.2), rgba(59, 23, 23, 0.24) 55%, rgba(14, 9, 10, 0.86))",
+  },
+  {
+    title: "Mars Landing",
+    detail: "Precision descent brings the mission to the Martian surface.",
+    tone: "linear-gradient(165deg, rgba(255, 109, 47, 0.3), rgba(92, 29, 18, 0.24) 52%, rgba(17, 10, 10, 0.84))",
+  },
+  {
+    title: "Exploration",
+    detail: "The rover begins its work, uncovering the secrets of Mars.",
+    tone: "linear-gradient(160deg, rgba(255, 185, 102, 0.24), rgba(94, 34, 18, 0.24) 57%, rgba(18, 10, 10, 0.82))",
+  },
+];
+
 export default function App() {
   const [launched, setLaunched] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -83,9 +114,11 @@ export default function App() {
   const [visibleScientificIndices, setVisibleScientificIndices] = useState(
     scientificInsights.map((_, index) => index === 0)
   );
+  const [conclusionVisible, setConclusionVisible] = useState(false);
   const sectionRef = useRef(null);
   const scientificScrollRef = useRef(null);
   const scientificBlockRefs = useRef([]);
+  const conclusionSectionRef = useRef(null);
   const canvasRef = useRef(null);
   const framesRef = useRef([]);
   const currentFrameRef = useRef(-1);
@@ -176,7 +209,7 @@ export default function App() {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [launched, activeScientificIndex]);
+  }, [launched]);
 
   useEffect(() => {
     if (!launched) return undefined;
@@ -326,6 +359,31 @@ export default function App() {
     scientificBlockRefs.current.forEach((node) => {
       if (node) observer.observe(node);
     });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [launched]);
+
+  useEffect(() => {
+    if (!launched) return undefined;
+
+    const section = conclusionSectionRef.current;
+    if (!section) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setConclusionVisible(true);
+          observer.disconnect();
+        }
+      },
+      {
+        threshold: 0.2,
+      }
+    );
+
+    observer.observe(section);
 
     return () => {
       observer.disconnect();
@@ -732,6 +790,59 @@ export default function App() {
                   </p>
                 </div>
               </div>
+            </div>
+          </section>
+
+          <section ref={conclusionSectionRef} className="conclusion-section" id="conclusion">
+            <div className="conclusion-overlay" aria-hidden="true" />
+            <div className="conclusion-content">
+              <p className="conclusion-kicker">Mission Recap</p>
+              <h2>The Journey Complete.</h2>
+              <p className="conclusion-subheading">
+                From Earth to Mars — every phase, every moment, every breakthrough.
+              </p>
+
+              <div className="conclusion-cards" role="list" aria-label="Journey summary cards">
+                {conclusionCards.map((card, index) => (
+                  <figure
+                    key={card.title}
+                    role="listitem"
+                    className={`conclusion-card-wrapper ${conclusionVisible ? "is-visible" : ""}`}
+                    style={{
+                      "--card-tone": card.tone,
+                      transitionDelay: `${index * 120}ms`,
+                    }}
+                  >
+                    {Array.from({ length: 9 }, (_, trackerIndex) => (
+                      <span
+                        key={`${card.title}-tracker-${trackerIndex + 1}`}
+                        className={`mouse-position-tracker tr-${trackerIndex + 1}`}
+                        aria-hidden="true"
+                      />
+                    ))}
+
+                    <div className="conclusion-card-shell">
+                      <div className="hud-corner tl" />
+                      <div className="hud-corner tr" />
+                      <div className="hud-corner bl" />
+                      <div className="hud-corner br" />
+
+                      <div className="conclusion-card-content">
+                        <figcaption className="conclusion-card-title glitch" data-text={card.title}>
+                          {card.title}
+                        </figcaption>
+                        <p className="conclusion-card-subtitle">Mission Archive</p>
+                        <p className="conclusion-card-detail">{card.detail}</p>
+                      </div>
+                    </div>
+                  </figure>
+                ))}
+              </div>
+
+              <p className="conclusion-emotion">
+                We didn’t just reach Mars.
+                <span>We redefined the journey.</span>
+              </p>
             </div>
           </section>
         </>
